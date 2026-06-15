@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, primaryKey } from "drizzle-orm/sqlite-core";
+import { sqliteTable, text, integer, primaryKey, foreignKey } from "drizzle-orm/sqlite-core";
 
 export const articles = sqliteTable("articles", {
   uuid: text("uuid").primaryKey(),
@@ -50,6 +50,17 @@ export const syncLog = sqliteTable("sync_log", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   lastSyncedAt: text("last_synced_at").notNull(),
 });
+
+export const comments = sqliteTable("comments", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  articleUuid: text("article_uuid").notNull().references(() => articles.uuid, { onDelete: "cascade" }),
+  parentId: integer("parent_id"),
+  content: text("content").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => ({
+  parentFk: foreignKey({ columns: [table.parentId], foreignColumns: [table.id] }).onDelete("cascade"),
+}));
 
 export const articleCategories = sqliteTable("article_categories", {
   articleUuid: text("article_uuid").notNull().references(() => articles.uuid, { onDelete: "cascade" }),

@@ -118,6 +118,32 @@ const options: swaggerJsdoc.Options = {
             thumbnail: { type: "string", nullable: true },
           },
         },
+        Comment: {
+          type: "object",
+          properties: {
+            id: { type: "integer", example: 1 },
+            userId: { type: "integer", example: 1 },
+            articleUuid: { type: "string", format: "uuid" },
+            content: { type: "string", example: "Excelente artigo!" },
+            createdAt: { type: "string", format: "date-time" },
+            username: { type: "string", example: "joaosilva" },
+            replies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  id: { type: "integer" },
+                  userId: { type: "integer" },
+                  articleUuid: { type: "string" },
+                  parentId: { type: "integer" },
+                  content: { type: "string" },
+                  createdAt: { type: "string" },
+                  username: { type: "string" },
+                },
+              },
+            },
+          },
+        },
       },
     },
     paths: {
@@ -687,6 +713,132 @@ const options: swaggerJsdoc.Options = {
               },
             },
             "404": { description: "Favorito não encontrado" },
+            "401": { description: "Não autenticado" },
+          },
+        },
+      },
+      "/comments/{articleUuid}": {
+        get: {
+          tags: ["Comentários"],
+          summary: "Lista comentários de um artigo (público)",
+          parameters: [
+            {
+              name: "articleUuid",
+              in: "path",
+              required: true,
+              schema: { type: "string", format: "uuid" },
+              description: "UUID do artigo",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Lista de comentários com respostas",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: {
+                        type: "array",
+                        items: { $ref: "#/components/schemas/Comment" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "404": { description: "Artigo não encontrado" },
+          },
+        },
+      },
+      "/comments": {
+        post: {
+          tags: ["Comentários"],
+          summary: "Cria um comentário ou resposta em um artigo",
+          security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["articleUuid", "content"],
+                  properties: {
+                    articleUuid: {
+                      type: "string",
+                      format: "uuid",
+                      example: "abc123",
+                    },
+                    content: {
+                      type: "string",
+                      minLength: 1,
+                      maxLength: 1000,
+                      example: "Excelente artigo!",
+                    },
+                    parentId: {
+                      type: "integer",
+                      nullable: true,
+                      description: "ID do comentário pai (para respostas)",
+                      example: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Comentário criado",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/Comment" },
+                    },
+                  },
+                },
+              },
+            },
+            "400": { description: "Erro de validação ou nível de aninhamento excedido" },
+            "404": { description: "Artigo ou comentário pai não encontrado" },
+            "401": { description: "Não autenticado" },
+          },
+        },
+      },
+      "/comments/{id}": {
+        delete: {
+          tags: ["Comentários"],
+          summary: "Remove o próprio comentário",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+              description: "ID do comentário",
+            },
+          ],
+          responses: {
+            "200": {
+              description: "Comentário removido",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      data: { $ref: "#/components/schemas/RemovedResponse" },
+                    },
+                  },
+                },
+              },
+            },
+            "403": { description: "Tentativa de deletar comentário de outro usuário" },
+            "404": { description: "Comentário não encontrado" },
             "401": { description: "Não autenticado" },
           },
         },

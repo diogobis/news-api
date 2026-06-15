@@ -7,6 +7,7 @@ import newsRouter from "./routes/news";
 import detailsRouter from "./routes/details";
 import authRouter from "./routes/auth";
 import meRouter from "./routes/me";
+import commentsRouter from "./routes/comments";
 import debugRouter from "./routes/debug";
 import { errorHandler } from "./middleware/error";
 import { syncAll } from "./services/sync";
@@ -33,6 +34,7 @@ app.use("/news", newsRouter);
 app.use("/details", detailsRouter);
 app.use("/auth", authRouter);
 app.use("/me", meRouter);
+app.use("/comments", commentsRouter);
 app.use("/debug", debugRouter);
 
 app.use(errorHandler);
