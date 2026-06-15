@@ -2,6 +2,16 @@ import { db, schema } from "../db";
 import { eq, inArray, sql, and } from "drizzle-orm";
 import { fetchArticleDetails } from "./fetcher";
 
+function formatBody(body: string | null): string | null {
+  if (!body) return body;
+  if (body.includes("<p>") || body.includes("<br>")) return body;
+  const paragraphs = body.split(/\n\n+/).map((p) => {
+    const inline = p.replace(/\n/g, "<br>");
+    return `<p>${inline}</p>`;
+  });
+  return paragraphs.join("\n");
+}
+
 export interface ArticleRow {
   uuid: string;
   title: string;
@@ -17,11 +27,14 @@ export interface ArticleRow {
 
 export async function listArticles(params: {
   category?: string;
+  search?: string;
+  publishedFrom?: string;
+  publishedTo?: string;
   page: number;
   limit: number;
   mutedKeywords?: string[];
 }): Promise<{ articles: ArticleRow[]; total: number }> {
-  const { category, page, limit, mutedKeywords } = params;
+  const { category, search, publishedFrom, publishedTo, page, limit, mutedKeywords } = params;
   const offset = (page - 1) * limit;
 
   const conditions: any[] = [];
@@ -33,6 +46,17 @@ export async function listArticles(params: {
       .where(eq(schema.articleCategories.category, category));
 
     conditions.push(inArray(schema.articles.uuid, matchingUuids));
+  }
+
+  if (search) {
+    conditions.push(sql`title LIKE ${`%${search}%`}`);
+  }
+
+  if (publishedFrom) {
+    conditions.push(sql`published_at >= ${publishedFrom}`);
+  }
+  if (publishedTo) {
+    conditions.push(sql`published_at <= ${publishedTo}`);
   }
 
   if (mutedKeywords && mutedKeywords.length > 0) {
@@ -75,6 +99,7 @@ export async function listArticles(params: {
 
   const articles: ArticleRow[] = rows.map((row) => ({
     ...row,
+    body: formatBody(row.body),
     detailsFetched: row.detailsFetched ?? false,
     categories: catMap.get(row.uuid) ?? [],
   }));
@@ -118,6 +143,7 @@ export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
 
   return {
     ...updated,
+    body: formatBody(updated.body),
     detailsFetched: updated.detailsFetched ?? false,
     categories: cats.map((c) => c.category),
   };
