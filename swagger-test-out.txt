@@ -1,0 +1,14 @@
+Server running on port 3000
+[sync] Starting sync at 2026-06-15T00:46:59.118Z
+[sync] Fetching category: politics
+[sync] Fetching category: world
+[sync] Fetching category: business
+[sync] Fetching category: technology
+[sync] Fetching category: science
+[sync] Fetching category: gaming
+[sync] Fetching category: education
+[sync] Fetching category: travel
+[sync] Fetching category: sports
+[sync] Sync complete at 2026-06-15T00:50:05.723Z
+
+C:\Users\Diogo Alves\Desktop\Codigo\app-sistemasmoveis\api>
