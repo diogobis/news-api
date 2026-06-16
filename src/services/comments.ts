@@ -22,7 +22,7 @@ export async function createComment(
   });
 
   if (!article) {
-    throw new AppError(404, "Article not found");
+    throw new AppError(404, "Artigo não encontrado");
   }
 
   if (parentId) {
@@ -33,15 +33,15 @@ export async function createComment(
       .get();
 
     if (!parent) {
-      throw new AppError(404, "Parent comment not found");
+      throw new AppError(404, "Comentário pai não encontrado");
     }
 
     if (parent.parentId !== null) {
-      throw new AppError(400, "Cannot reply to a reply (only 1 level of nesting)");
+      throw new AppError(400, "Não é possível responder a uma resposta (apenas 1 nível de aninhamento)");
     }
 
     if (parent.articleUuid !== articleUuid) {
-      throw new AppError(400, "Parent comment does not belong to this article");
+      throw new AppError(400, "Comentário pai não pertence a este artigo");
     }
   }
 
@@ -67,11 +67,11 @@ export async function updateComment(
     .get();
 
   if (!comment) {
-    throw new AppError(404, "Comment not found");
+    throw new AppError(404, "Comentário não encontrado");
   }
 
   if (comment.userId !== userId) {
-    throw new AppError(403, "You can only edit your own comments");
+    throw new AppError(403, "Você só pode editar seus próprios comentários");
   }
 
   db.update(schema.comments)
@@ -90,11 +90,11 @@ export async function deleteComment(userId: number, commentId: number): Promise<
     .get();
 
   if (!comment) {
-    throw new AppError(404, "Comment not found");
+    throw new AppError(404, "Comentário não encontrado");
   }
 
   if (comment.userId !== userId) {
-    throw new AppError(403, "You can only delete your own comments");
+    throw new AppError(403, "Você só pode deletar seus próprios comentários");
   }
 
   db.delete(schema.comments).where(eq(schema.comments.id, commentId)).run();
@@ -106,7 +106,7 @@ export async function listComments(articleUuid: string) {
   });
 
   if (!article) {
-    throw new AppError(404, "Article not found");
+    throw new AppError(404, "Artigo não encontrado");
   }
 
   const rows = db

@@ -41,15 +41,15 @@ app.use("/debug", debugRouter);
 app.use(errorHandler);
 
 app.listen(PORT, async () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Servidor rodando na porta ${PORT}`);
 
   const existing = db.select().from(schema.syncLog).limit(1).get();
   if (!existing) {
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    console.log("[sync] First run detected — running initial sync (past week)...");
+    console.log("[sync] Primeira execução detectada — sincronizando (última semana)...");
     await syncAll(weekAgo);
   } else {
-    console.log("[sync] Sync log exists — relying on cron schedule");
+    console.log("[sync] Log de sync existe — usando agendamento cron");
   }
 
   const job = new CronJob(
@@ -60,5 +60,5 @@ app.listen(PORT, async () => {
     "America/Sao_Paulo"
   );
 
-  console.log(`[cron] Sync scheduled every 6 hours (${job.nextDate().toISO()})`);
+  console.log(`[cron] Sync agendado a cada 6 horas (${job.nextDate().toISO()})`);
 });

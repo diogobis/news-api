@@ -12,7 +12,7 @@ client.interceptors.response.use(
   async (error) => {
     if (error.response?.status === 429) {
       const retryAfter = error.response.data?.retry_after_ms ?? 3000;
-      console.warn(`[fetcher] Rate limited. Waiting ${retryAfter}ms before retry...`);
+      console.warn(`[fetcher] Limite de taxa atingido. Aguardando ${retryAfter}ms antes de tentar novamente...`);
       await new Promise((resolve) => setTimeout(resolve, retryAfter));
       return client.request(error.config);
     }

@@ -114,7 +114,7 @@ export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
   });
 
   if (!existing) {
-    throw new AppError(404, "Article not found");
+    throw new AppError(404, "Artigo não encontrado");
   }
 
   let updated = existing;

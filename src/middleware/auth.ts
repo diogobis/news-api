@@ -24,7 +24,7 @@ declare global {
 export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
-    throw new AppError(401, "Missing or invalid authorization header");
+    throw new AppError(401, "Header de autorização ausente ou inválido");
   }
 
   const token = header.slice(7);
@@ -32,12 +32,12 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
     const user = db.select().from(schema.users).where(eq(schema.users.id, payload.userId)).get();
     if (!user) {
-      throw new AppError(401, "User not found. Please log in again.");
+      throw new AppError(401, "Usuário não encontrado. Faça login novamente.");
     }
     req.user = payload;
     next();
   } catch (err) {
     if (err instanceof AppError) throw err;
-    throw new AppError(401, "Invalid or expired token");
+    throw new AppError(401, "Token inválido ou expirado");
   }
 }

@@ -8,6 +8,6 @@ export function errorHandler(err: unknown, _req: Request, res: Response, _next: 
     return;
   }
 
-  console.error("[error]", err);
-  sendError(res, 500, "Internal server error");
+  console.error("[erro]", err);
+  sendError(res, 500, "Erro interno do servidor");
 }

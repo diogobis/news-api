@@ -12,7 +12,7 @@ export interface MutedKeyword {
 export async function addKeyword(userId: number, keyword: string): Promise<MutedKeyword> {
   const trimmed = keyword.trim().toLowerCase();
   if (!trimmed) {
-    throw new AppError(400, "Keyword cannot be empty");
+    throw new AppError(400, "Palavra-chave não pode estar vazia");
   }
 
   const existing = await db
@@ -27,7 +27,7 @@ export async function addKeyword(userId: number, keyword: string): Promise<Muted
     .limit(1);
 
   if (existing.length > 0) {
-    throw new AppError(409, "Keyword already muted");
+    throw new AppError(409, "Palavra já silenciada");
   }
 
   const now = new Date().toISOString();
@@ -50,7 +50,7 @@ export async function removeKeyword(userId: number, keywordId: number): Promise<
     );
 
   if (result.changes === 0) {
-    throw new AppError(404, "Muted keyword not found");
+    throw new AppError(404, "Palavra silenciada não encontrada");
   }
 }
 

@@ -21,7 +21,7 @@ export async function saveArticle(userId: number, articleUuid: string): Promise<
   });
 
   if (!article) {
-    throw new AppError(404, "Article not found");
+    throw new AppError(404, "Artigo não encontrado");
   }
 
   const existing = await db
@@ -36,7 +36,7 @@ export async function saveArticle(userId: number, articleUuid: string): Promise<
     .limit(1);
 
   if (existing.length > 0) {
-    throw new AppError(409, "Article already in read-later queue");
+    throw new AppError(409, "Artigo já está na fila de leitura posterior");
   }
 
   const now = new Date().toISOString();
@@ -59,7 +59,7 @@ export async function removeArticle(userId: number, articleUuid: string): Promis
     );
 
   if (result.changes === 0) {
-    throw new AppError(404, "Article not in read-later queue");
+    throw new AppError(404, "Artigo não está na fila de leitura posterior");
   }
 }
 

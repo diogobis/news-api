@@ -30,7 +30,7 @@ async function fetchDetailsSequential(uuids: string[]) {
       const detail = await fetchArticleDetails(uuid);
       results.push({ uuid, detail });
     } catch (err) {
-      console.error(`[sync] Error fetching details for ${uuid}:`, err);
+      console.error(`[sync] Erro ao buscar detalhes de ${uuid}:`, err);
       results.push({ uuid });
     }
 
@@ -44,7 +44,7 @@ async function fetchDetailsSequential(uuids: string[]) {
 
 export async function syncAll(since?: string) {
   const now = new Date().toISOString();
-  console.log(`[sync] Starting sync at ${now}`);
+  console.log(`[sync] Iniciando sync em ${now}`);
 
   let lastSyncedAt = since;
   if (!lastSyncedAt) {
@@ -52,11 +52,11 @@ export async function syncAll(since?: string) {
     lastSyncedAt = lastSyncRow?.lastSyncedAt;
   }
   if (lastSyncedAt) {
-    console.log(`[sync] Fetching articles published after ${lastSyncedAt}`);
+    console.log(`[sync] Buscando artigos publicados após ${lastSyncedAt}`);
   }
 
   for (const category of CATEGORIES) {
-    console.log(`[sync] Fetching category: ${category}`);
+    console.log(`[sync] Buscando categoria: ${category}`);
     let cursor: string | undefined;
     let page = 0;
 
@@ -95,7 +95,7 @@ export async function syncAll(since?: string) {
 
         await sleep(1100);
       } catch (err) {
-        console.error(`[sync] Error fetching listing for ${category}:`, err);
+        console.error(`[sync] Erro ao buscar listagem de ${category}:`, err);
         break;
       }
     } while (cursor && page < MAX_PAGES);
@@ -115,7 +115,7 @@ export async function syncAll(since?: string) {
 
     if (articlesToDetail.length > 0) {
       const uuids = articlesToDetail.map((r) => r.articles.uuid);
-      console.log(`[sync] Fetching details for ${uuids.length} articles in ${category}`);
+      console.log(`[sync] Buscando detalhes de ${uuids.length} artigos em ${category}`);
       await sleep(2000);
       const results = await fetchDetailsSequential(uuids);
 
@@ -143,5 +143,5 @@ export async function syncAll(since?: string) {
     db.insert(schema.syncLog).values({ lastSyncedAt: now }).run();
   }
 
-  console.log(`[sync] Sync complete at ${now}`);
+  console.log(`[sync] Sync completo em ${now}`);
 }

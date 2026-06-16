@@ -21,7 +21,7 @@ export async function saveFavorite(userId: number, articleUuid: string): Promise
   });
 
   if (!article) {
-    throw new AppError(404, "Article not found");
+    throw new AppError(404, "Artigo não encontrado");
   }
 
   const existing = await db
@@ -36,7 +36,7 @@ export async function saveFavorite(userId: number, articleUuid: string): Promise
     .limit(1);
 
   if (existing.length > 0) {
-    throw new AppError(409, "Article already favorited");
+    throw new AppError(409, "Artigo já favoritado");
   }
 
   const now = new Date().toISOString();
@@ -59,7 +59,7 @@ export async function removeFavorite(userId: number, articleUuid: string): Promi
     );
 
   if (result.changes === 0) {
-    throw new AppError(404, "Favorite not found");
+    throw new AppError(404, "Favorito não encontrado");
   }
 }
 

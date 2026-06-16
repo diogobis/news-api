@@ -50,7 +50,7 @@ export async function register(
 
   if (existing.length > 0) {
     const conflict =
-      existing[0].email === email ? "Email already registered" : "Username already taken";
+      existing[0].email === email ? "Email já cadastrado" : "Username já em uso";
     throw new AppError(409, conflict);
   }
 
@@ -83,12 +83,12 @@ export async function login(
     .limit(1);
 
   if (!found) {
-    throw new AppError(401, "Invalid credentials");
+    throw new AppError(401, "Credenciais inválidas");
   }
 
   const valid = await bcrypt.compare(password, found.password);
   if (!valid) {
-    throw new AppError(401, "Invalid credentials");
+    throw new AppError(401, "Credenciais inválidas");
   }
 
   const user = toAuthUser(found);
