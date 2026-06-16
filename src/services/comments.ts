@@ -1,5 +1,6 @@
 import { db, schema } from "../db";
 import { eq, desc } from "drizzle-orm";
+import { AppError } from "../lib/appError";
 
 export interface CommentRow {
   id: number;
@@ -21,7 +22,7 @@ export async function createComment(
   });
 
   if (!article) {
-    throw { status: 404, message: "Article not found" };
+    throw new AppError(404, "Article not found");
   }
 
   if (parentId) {
@@ -32,15 +33,15 @@ export async function createComment(
       .get();
 
     if (!parent) {
-      throw { status: 404, message: "Parent comment not found" };
+      throw new AppError(404, "Parent comment not found");
     }
 
     if (parent.parentId !== null) {
-      throw { status: 400, message: "Cannot reply to a reply (only 1 level of nesting)" };
+      throw new AppError(400, "Cannot reply to a reply (only 1 level of nesting)");
     }
 
     if (parent.articleUuid !== articleUuid) {
-      throw { status: 400, message: "Parent comment does not belong to this article" };
+      throw new AppError(400, "Parent comment does not belong to this article");
     }
   }
 
@@ -62,11 +63,11 @@ export async function deleteComment(userId: number, commentId: number): Promise<
     .get();
 
   if (!comment) {
-    throw { status: 404, message: "Comment not found" };
+    throw new AppError(404, "Comment not found");
   }
 
   if (comment.userId !== userId) {
-    throw { status: 403, message: "You can only delete your own comments" };
+    throw new AppError(403, "You can only delete your own comments");
   }
 
   db.delete(schema.comments).where(eq(schema.comments.id, commentId)).run();
@@ -78,7 +79,7 @@ export async function listComments(articleUuid: string) {
   });
 
   if (!article) {
-    throw { status: 404, message: "Article not found" };
+    throw new AppError(404, "Article not found");
   }
 
   const rows = db

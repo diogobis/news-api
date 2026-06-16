@@ -1,5 +1,6 @@
 import { db, schema } from "../db";
 import { eq, and } from "drizzle-orm";
+import { AppError } from "../lib/appError";
 
 export interface FavoriteItem {
   userId: number;
@@ -13,7 +14,7 @@ export async function saveFavorite(userId: number, articleUuid: string): Promise
   });
 
   if (!article) {
-    throw { status: 404, message: "Article not found" };
+    throw new AppError(404, "Article not found");
   }
 
   const existing = await db
@@ -28,7 +29,7 @@ export async function saveFavorite(userId: number, articleUuid: string): Promise
     .limit(1);
 
   if (existing.length > 0) {
-    throw { status: 409, message: "Article already favorited" };
+    throw new AppError(409, "Article already favorited");
   }
 
   const now = new Date().toISOString();
@@ -51,7 +52,7 @@ export async function removeFavorite(userId: number, articleUuid: string): Promi
     );
 
   if (result.changes === 0) {
-    throw { status: 404, message: "Favorite not found" };
+    throw new AppError(404, "Favorite not found");
   }
 }
 

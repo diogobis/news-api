@@ -2,8 +2,10 @@ import { db, schema } from "../db";
 import { eq, or } from "drizzle-orm";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { AppError } from "../lib/appError";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = env.JWT_SECRET;
 const JWT_EXPIRES_IN = "7d";
 
 export interface AuthUser {
@@ -49,7 +51,7 @@ export async function register(
   if (existing.length > 0) {
     const conflict =
       existing[0].email === email ? "Email already registered" : "Username already taken";
-    throw { status: 409, message: conflict };
+    throw new AppError(409, conflict);
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -81,12 +83,12 @@ export async function login(
     .limit(1);
 
   if (!found) {
-    throw { status: 401, message: "Invalid credentials" };
+    throw new AppError(401, "Invalid credentials");
   }
 
   const valid = await bcrypt.compare(password, found.password);
   if (!valid) {
-    throw { status: 401, message: "Invalid credentials" };
+    throw new AppError(401, "Invalid credentials");
   }
 
   const user = toAuthUser(found);

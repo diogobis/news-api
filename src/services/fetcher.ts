@@ -1,16 +1,10 @@
 import axios from "axios";
-
-const API_URL = process.env.NEWS_API_URL || "https://api.freenewsapi.io/v1";
-const API_KEY = process.env.NEWS_API_KEY;
-
-if (!API_KEY) {
-  throw new Error("NEWS_API_KEY is not set");
-}
+import { env } from "../config/env";
 
 const client = axios.create({
-  baseURL: API_URL,
+  baseURL: env.NEWS_API_URL,
   timeout: 30000,
-  headers: { "x-api-key": API_KEY },
+  headers: { "x-api-key": env.NEWS_API_KEY },
 });
 
 client.interceptors.response.use(
@@ -66,7 +60,8 @@ export async function fetchNewsList(
   topic: string,
   language = "pt-419",
   country = "BR",
-  cursor?: string
+  cursor?: string,
+  publishedAfter?: string
 ): Promise<ArticleListResponse> {
   const params: Record<string, string> = {
     language,
@@ -76,6 +71,7 @@ export async function fetchNewsList(
     page_size: "50",
   };
   if (cursor) params.next_cursor = cursor;
+  if (publishedAfter) params.published_after = publishedAfter;
 
   const { data } = await client.get<ArticleListResponse>("/news", { params });
   return data;

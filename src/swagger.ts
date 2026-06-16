@@ -22,15 +22,18 @@ const options: swaggerJsdoc.Options = {
         SuccessResponse: {
           type: "object",
           properties: {
-            success: { type: "boolean", example: true },
             data: { type: "object" },
           },
         },
         ErrorResponse: {
           type: "object",
           properties: {
-            success: { type: "boolean", example: false },
-            error: { type: "string", example: "Mensagem de erro descritiva" },
+            error: {
+              type: "object",
+              properties: {
+                message: { type: "string", example: "Mensagem de erro descritiva" },
+              },
+            },
           },
         },
         PaginationMeta: {
@@ -159,7 +162,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "object",
                         properties: { status: { type: "string", example: "ok" } },
@@ -199,6 +201,27 @@ const options: swaggerJsdoc.Options = {
               schema: { type: "integer", default: 20, maximum: 50 },
               description: "Itens por página (1–50)",
             },
+            {
+              name: "search",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Busca por título (LIKE)",
+            },
+            {
+              name: "published_from",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar a partir desta data (ISO)",
+            },
+            {
+              name: "published_to",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar até esta data (ISO)",
+            },
           ],
           responses: {
             "200": {
@@ -208,7 +231,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/Article" },
@@ -244,7 +266,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/ArticleDetail" },
                     },
                   },
@@ -294,7 +315,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/AuthResponse" },
                     },
                   },
@@ -336,7 +356,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/AuthResponse" },
                     },
                   },
@@ -372,6 +391,27 @@ const options: swaggerJsdoc.Options = {
               required: false,
               schema: { type: "integer", default: 20, maximum: 50 },
             },
+            {
+              name: "search",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Busca por título (LIKE)",
+            },
+            {
+              name: "published_from",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar a partir desta data (ISO)",
+            },
+            {
+              name: "published_to",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar até esta data (ISO)",
+            },
           ],
           responses: {
             "200": {
@@ -381,7 +421,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/Article" },
@@ -428,7 +467,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/MutedKeyword" },
                     },
                   },
@@ -451,7 +489,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/MutedKeyword" },
@@ -487,7 +524,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/RemovedResponse" },
                     },
                   },
@@ -529,7 +565,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "object",
                         properties: {
@@ -560,7 +595,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/ReadLaterEntry" },
@@ -596,7 +630,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/RemovedResponse" },
                     },
                   },
@@ -638,7 +671,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "object",
                         properties: {
@@ -669,7 +701,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/FavoriteEntry" },
@@ -705,7 +736,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/RemovedResponse" },
                     },
                   },
@@ -738,7 +768,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: {
                         type: "array",
                         items: { $ref: "#/components/schemas/Comment" },
@@ -795,7 +824,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/Comment" },
                     },
                   },
@@ -830,7 +858,6 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      success: { type: "boolean", example: true },
                       data: { $ref: "#/components/schemas/RemovedResponse" },
                     },
                   },

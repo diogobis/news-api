@@ -43,7 +43,14 @@ async function fetchDetailsSequential(uuids: string[]) {
 }
 
 export async function syncAll() {
-  console.log(`[sync] Starting sync at ${new Date().toISOString()}`);
+  const now = new Date().toISOString();
+  console.log(`[sync] Starting sync at ${now}`);
+
+  const lastSyncRow = db.select().from(schema.syncLog).limit(1).get();
+  const lastSyncedAt = lastSyncRow?.lastSyncedAt;
+  if (lastSyncedAt) {
+    console.log(`[sync] Fetching articles published after ${lastSyncedAt}`);
+  }
 
   for (const category of CATEGORIES) {
     console.log(`[sync] Fetching category: ${category}`);
@@ -52,7 +59,7 @@ export async function syncAll() {
 
     do {
       try {
-        const response = await fetchNewsList(category, "pt-419", "BR", cursor);
+        const response = await fetchNewsList(category, "pt-419", "BR", cursor, lastSyncedAt);
         for (const item of response.data) {
           db.insert(schema.articles)
             .values({
@@ -125,8 +132,6 @@ export async function syncAll() {
       }
     }
   }
-
-  const now = new Date().toISOString();
 
   const existing = db.select().from(schema.syncLog).limit(1).get();
   if (existing) {

@@ -1,10 +1,10 @@
 import { z, ZodError } from "zod";
+import { AppError } from "./appError";
 
-export class ValidationError extends Error {
-  status: number;
+export class ValidationError extends AppError {
   constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
+    super(status, message);
+    this.name = "ValidationError";
   }
 }
 

@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { env } from "../config/env";
+import { AppError } from "../lib/appError";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
+const JWT_SECRET = env.JWT_SECRET;
 
 export interface JwtPayload {
   userId: number;
@@ -20,7 +22,7 @@ declare global {
 export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const header = req.headers.authorization;
   if (!header || !header.startsWith("Bearer ")) {
-    throw { status: 401, message: "Missing or invalid authorization header" };
+    throw new AppError(401, "Missing or invalid authorization header");
   }
 
   const token = header.slice(7);
@@ -29,6 +31,6 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
     req.user = payload;
     next();
   } catch {
-    throw { status: 401, message: "Invalid or expired token" };
+    throw new AppError(401, "Invalid or expired token");
   }
 }

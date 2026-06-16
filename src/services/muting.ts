@@ -1,5 +1,6 @@
 import { db, schema } from "../db";
 import { eq, and } from "drizzle-orm";
+import { AppError } from "../lib/appError";
 
 export interface MutedKeyword {
   id: number;
@@ -11,7 +12,7 @@ export interface MutedKeyword {
 export async function addKeyword(userId: number, keyword: string): Promise<MutedKeyword> {
   const trimmed = keyword.trim().toLowerCase();
   if (!trimmed) {
-    throw { status: 400, message: "Keyword cannot be empty" };
+    throw new AppError(400, "Keyword cannot be empty");
   }
 
   const existing = await db
@@ -26,7 +27,7 @@ export async function addKeyword(userId: number, keyword: string): Promise<Muted
     .limit(1);
 
   if (existing.length > 0) {
-    throw { status: 409, message: "Keyword already muted" };
+    throw new AppError(409, "Keyword already muted");
   }
 
   const now = new Date().toISOString();
@@ -49,7 +50,7 @@ export async function removeKeyword(userId: number, keywordId: number): Promise<
     );
 
   if (result.changes === 0) {
-    throw { status: 404, message: "Muted keyword not found" };
+    throw new AppError(404, "Muted keyword not found");
   }
 }
 

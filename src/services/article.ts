@@ -1,5 +1,6 @@
 import { db, schema } from "../db";
 import { eq, inArray, sql, and } from "drizzle-orm";
+import { AppError } from "../lib/appError";
 import { fetchArticleDetails } from "./fetcher";
 
 function formatBody(body: string | null): string | null {
@@ -113,7 +114,7 @@ export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
   });
 
   if (!existing) {
-    throw { status: 404, message: "Article not found" };
+    throw new AppError(404, "Article not found");
   }
 
   let updated = existing;

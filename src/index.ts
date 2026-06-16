@@ -1,8 +1,8 @@
-import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { CronJob } from "cron";
 import swaggerUi from "swagger-ui-express";
+import { env } from "./config/env";
 import newsRouter from "./routes/news";
 import detailsRouter from "./routes/details";
 import authRouter from "./routes/auth";
@@ -11,12 +11,13 @@ import commentsRouter from "./routes/comments";
 import debugRouter from "./routes/debug";
 import { errorHandler } from "./middleware/error";
 import { syncAll } from "./services/sync";
+import { db, schema } from "./db";
 import { swaggerSpec } from "./swagger";
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = env.PORT;
 
-const allowedOrigins = ["http://localhost:8081", "http://localhost:3000", "http://localhost:3001"];
+const allowedOrigins = env.CORS_ORIGINS.split(",");
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 
@@ -39,8 +40,16 @@ app.use("/debug", debugRouter);
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
+
+  const existing = db.select().from(schema.syncLog).limit(1).get();
+  if (!existing) {
+    console.log("[sync] First run detected — running initial sync...");
+    await syncAll();
+  } else {
+    console.log("[sync] Sync log exists — relying on cron schedule");
+  }
 
   const job = new CronJob(
     "0 */6 * * *",
