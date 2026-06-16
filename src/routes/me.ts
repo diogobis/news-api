@@ -37,6 +37,20 @@ const removeFavoriteSchema = z.object({
   articleUuid: z.string().uuid(),
 });
 
+const favoriteQuerySchema = z.object({
+  search: z.string().optional(),
+  publishedFrom: z.string().optional(),
+  publishedTo: z.string().optional(),
+  category: z.string().optional(),
+});
+
+const readLaterQuerySchema = z.object({
+  search: z.string().optional(),
+  publishedFrom: z.string().optional(),
+  publishedTo: z.string().optional(),
+  category: z.string().optional(),
+});
+
 const newsQuerySchema = z.object({
   category: z.string().optional(),
   search: z.string().optional(),
@@ -99,7 +113,8 @@ router.post("/read-later", async (req: Request, res: Response, next: NextFunctio
 
 router.get("/read-later", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const items = await listQueue(req.user!.userId);
+    const filters = validate(readLaterQuerySchema, req.query);
+    const items = await listQueue(req.user!.userId, filters);
     sendSuccess(res, items);
   } catch (err) {
     next(err);
@@ -128,7 +143,8 @@ router.post("/favorites", async (req: Request, res: Response, next: NextFunction
 
 router.get("/favorites", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const items = await listFavorites(req.user!.userId);
+    const filters = validate(favoriteQuerySchema, req.query);
+    const items = await listFavorites(req.user!.userId, filters);
     sendSuccess(res, items);
   } catch (err) {
     next(err);

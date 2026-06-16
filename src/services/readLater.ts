@@ -1,6 +1,13 @@
 import { db, schema } from "../db";
-import { eq, and, sql, gte } from "drizzle-orm";
+import { eq, and, inArray, sql, gte } from "drizzle-orm";
 import { AppError } from "../lib/appError";
+
+export interface QueueFilters {
+  search?: string;
+  publishedFrom?: string;
+  publishedTo?: string;
+  category?: string;
+}
 
 export interface ReadLaterItem {
   userId: number;
@@ -56,8 +63,33 @@ export async function removeArticle(userId: number, articleUuid: string): Promis
   }
 }
 
-export async function listQueue(userId: number) {
+export async function listQueue(userId: number, filters?: QueueFilters) {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+
+  const conditions: any[] = [
+    eq(schema.userReadLater.userId, userId),
+    gte(schema.userReadLater.savedAt, cutoff),
+  ];
+
+  if (filters?.search) {
+    conditions.push(sql`${schema.articles.title} LIKE ${`%${filters.search}%`}`);
+  }
+
+  if (filters?.publishedFrom) {
+    conditions.push(sql`${schema.articles.publishedAt} >= ${filters.publishedFrom}`);
+  }
+
+  if (filters?.publishedTo) {
+    conditions.push(sql`${schema.articles.publishedAt} <= ${filters.publishedTo}`);
+  }
+
+  if (filters?.category) {
+    const matchingUuids = db
+      .select({ uuid: schema.articleCategories.articleUuid })
+      .from(schema.articleCategories)
+      .where(eq(schema.articleCategories.category, filters.category));
+    conditions.push(inArray(schema.articles.uuid, matchingUuids));
+  }
 
   return db
     .select({
@@ -71,11 +103,6 @@ export async function listQueue(userId: number) {
     })
     .from(schema.userReadLater)
     .innerJoin(schema.articles, eq(schema.userReadLater.articleUuid, schema.articles.uuid))
-    .where(
-      and(
-        eq(schema.userReadLater.userId, userId),
-        gte(schema.userReadLater.savedAt, cutoff)
-      )
-    )
+    .where(and(...conditions))
     .orderBy(schema.userReadLater.savedAt);
 }

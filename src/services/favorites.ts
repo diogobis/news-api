@@ -1,6 +1,13 @@
 import { db, schema } from "../db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray, sql } from "drizzle-orm";
 import { AppError } from "../lib/appError";
+
+export interface FavoriteFilters {
+  search?: string;
+  publishedFrom?: string;
+  publishedTo?: string;
+  category?: string;
+}
 
 export interface FavoriteItem {
   userId: number;
@@ -56,7 +63,31 @@ export async function removeFavorite(userId: number, articleUuid: string): Promi
   }
 }
 
-export async function listFavorites(userId: number) {
+export async function listFavorites(userId: number, filters?: FavoriteFilters) {
+  const conditions: any[] = [
+    eq(schema.userFavorites.userId, userId),
+  ];
+
+  if (filters?.search) {
+    conditions.push(sql`${schema.articles.title} LIKE ${`%${filters.search}%`}`);
+  }
+
+  if (filters?.publishedFrom) {
+    conditions.push(sql`${schema.articles.publishedAt} >= ${filters.publishedFrom}`);
+  }
+
+  if (filters?.publishedTo) {
+    conditions.push(sql`${schema.articles.publishedAt} <= ${filters.publishedTo}`);
+  }
+
+  if (filters?.category) {
+    const matchingUuids = db
+      .select({ uuid: schema.articleCategories.articleUuid })
+      .from(schema.articleCategories)
+      .where(eq(schema.articleCategories.category, filters.category));
+    conditions.push(inArray(schema.articles.uuid, matchingUuids));
+  }
+
   return db
     .select({
       userId: schema.userFavorites.userId,
@@ -69,6 +100,6 @@ export async function listFavorites(userId: number) {
     })
     .from(schema.userFavorites)
     .innerJoin(schema.articles, eq(schema.userFavorites.articleUuid, schema.articles.uuid))
-    .where(eq(schema.userFavorites.userId, userId))
+    .where(and(...conditions))
     .orderBy(schema.userFavorites.createdAt);
 }
