@@ -21,7 +21,7 @@ export interface ArticleRow {
   thumbnail: string | null;
   originalUrl: string | null;
   body: string | null;
-  authors: string | null;
+  authors: string[] | null;
   detailsFetched: boolean;
   categories: string[];
 }
@@ -126,7 +126,7 @@ export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
         body: detail.body,
         thumbnail: detail.thumbnail,
         originalUrl: detail.original_url,
-        authors: JSON.stringify(detail.authors),
+            authors: detail.authors,
         detailsFetched: true,
         fetchedAt: new Date().toISOString(),
       })

@@ -53,6 +53,10 @@ const options: swaggerJsdoc.Options = {
             publisher: { type: "string", example: "Folha de S.Paulo" },
             publishedAt: { type: "string", format: "date-time" },
             thumbnail: { type: "string", nullable: true, example: null },
+            originalUrl: { type: "string", nullable: true },
+            body: { type: "string", nullable: true, description: "Texto completo do artigo" },
+            authors: { type: "array", items: { type: "string" }, nullable: true },
+            detailsFetched: { type: "boolean", example: false },
             categories: { type: "array", items: { type: "string" }, example: ["politics"] },
           },
         },
@@ -66,7 +70,8 @@ const options: swaggerJsdoc.Options = {
             thumbnail: { type: "string", nullable: true },
             originalUrl: { type: "string" },
             body: { type: "string", description: "Texto completo do artigo" },
-            authors: { type: "string" },
+            authors: { type: "array", items: { type: "string" } },
+            detailsFetched: { type: "boolean", example: true },
             categories: { type: "array", items: { type: "string" } },
           },
         },
@@ -161,12 +166,7 @@ const options: swaggerJsdoc.Options = {
                 "application/json": {
                   schema: {
                     type: "object",
-                    properties: {
-                      data: {
-                        type: "object",
-                        properties: { status: { type: "string", example: "ok" } },
-                      },
-                    },
+                    properties: { status: { type: "string", example: "ok" } },
                   },
                 },
               },
@@ -209,18 +209,18 @@ const options: swaggerJsdoc.Options = {
               description: "Busca por título (LIKE)",
             },
             {
-              name: "published_from",
+              name: "publishedFrom",
               in: "query",
               required: false,
               schema: { type: "string", format: "date-time" },
-              description: "Filtrar a partir desta data (ISO)",
+              description: "Filtrar a partir desta data (ISO 8601)",
             },
             {
-              name: "published_to",
+              name: "publishedTo",
               in: "query",
               required: false,
               schema: { type: "string", format: "date-time" },
-              description: "Filtrar até esta data (ISO)",
+              description: "Filtrar até esta data (ISO 8601)",
             },
           ],
           responses: {
@@ -298,8 +298,8 @@ const options: swaggerJsdoc.Options = {
                     },
                     password: {
                       type: "string",
-                      minLength: 6,
-                      maxLength: 100,
+                      minLength: 8,
+                      maxLength: 128,
                       example: "securePassword123",
                     },
                   },
@@ -399,18 +399,18 @@ const options: swaggerJsdoc.Options = {
               description: "Busca por título (LIKE)",
             },
             {
-              name: "published_from",
+              name: "publishedFrom",
               in: "query",
               required: false,
               schema: { type: "string", format: "date-time" },
-              description: "Filtrar a partir desta data (ISO)",
+              description: "Filtrar a partir desta data (ISO 8601)",
             },
             {
-              name: "published_to",
+              name: "publishedTo",
               in: "query",
               required: false,
               schema: { type: "string", format: "date-time" },
-              description: "Filtrar até esta data (ISO)",
+              description: "Filtrar até esta data (ISO 8601)",
             },
           ],
           responses: {
@@ -587,6 +587,36 @@ const options: swaggerJsdoc.Options = {
           tags: ["Usuário (Autenticado)"],
           summary: "Lista a fila de leitura posterior do usuário (apenas últimas 48h)",
           security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "search",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Busca por título (LIKE)",
+            },
+            {
+              name: "publishedFrom",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar a partir desta data (ISO 8601)",
+            },
+            {
+              name: "publishedTo",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar até esta data (ISO 8601)",
+            },
+            {
+              name: "category",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Filtrar por categoria",
+            },
+          ],
           responses: {
             "200": {
               description: "Fila de leitura posterior",
@@ -693,6 +723,36 @@ const options: swaggerJsdoc.Options = {
           tags: ["Usuário (Autenticado)"],
           summary: "Lista todos os artigos favoritos do usuário",
           security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "search",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Busca por título (LIKE)",
+            },
+            {
+              name: "publishedFrom",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar a partir desta data (ISO 8601)",
+            },
+            {
+              name: "publishedTo",
+              in: "query",
+              required: false,
+              schema: { type: "string", format: "date-time" },
+              description: "Filtrar até esta data (ISO 8601)",
+            },
+            {
+              name: "category",
+              in: "query",
+              required: false,
+              schema: { type: "string" },
+              description: "Filtrar por categoria",
+            },
+          ],
           responses: {
             "200": {
               description: "Lista de favoritos",
@@ -824,7 +884,17 @@ const options: swaggerJsdoc.Options = {
                   schema: {
                     type: "object",
                     properties: {
-                      data: { $ref: "#/components/schemas/Comment" },
+                      data: {
+                        type: "object",
+                        properties: {
+                          id: { type: "integer" },
+                          userId: { type: "integer" },
+                          articleUuid: { type: "string", format: "uuid" },
+                          parentId: { type: "integer", nullable: true },
+                          content: { type: "string" },
+                          createdAt: { type: "string", format: "date-time" },
+                        },
+                      },
                     },
                   },
                 },
@@ -837,6 +907,62 @@ const options: swaggerJsdoc.Options = {
         },
       },
       "/comments/{id}": {
+        put: {
+          tags: ["Comentários"],
+          summary: "Edita o próprio comentário",
+          security: [{ bearerAuth: [] }],
+          parameters: [
+            {
+              name: "id",
+              in: "path",
+              required: true,
+              schema: { type: "integer" },
+              description: "ID do comentário",
+            },
+          ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["content"],
+                  properties: {
+                    content: { type: "string", minLength: 1, maxLength: 1000, example: "Texto editado" },
+                  },
+                },
+              },
+            },
+          },
+          responses: {
+            "200": {
+              description: "Comentário editado",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: {
+                        type: "object",
+                        properties: {
+                          id: { type: "integer" },
+                          userId: { type: "integer" },
+                          articleUuid: { type: "string", format: "uuid" },
+                          parentId: { type: "integer", nullable: true },
+                          content: { type: "string" },
+                          createdAt: { type: "string", format: "date-time" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            "403": { description: "Tentativa de editar comentário de outro usuário" },
+            "404": { description: "Comentário não encontrado" },
+            "401": { description: "Não autenticado" },
+          },
+        },
         delete: {
           tags: ["Comentários"],
           summary: "Remove o próprio comentário",
@@ -867,6 +993,48 @@ const options: swaggerJsdoc.Options = {
             "403": { description: "Tentativa de deletar comentário de outro usuário" },
             "404": { description: "Comentário não encontrado" },
             "401": { description: "Não autenticado" },
+          },
+        },
+      },
+      "/debug/cleanup": {
+        delete: {
+          tags: ["Debug"],
+          summary: "Remove artigos sem detalhes carregados",
+          responses: {
+            "200": {
+              description: "Artigos removidos",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/RemovedResponse" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      "/debug/wipe": {
+        delete: {
+          tags: ["Debug"],
+          summary: "Limpa todo o banco de dados",
+          responses: {
+            "200": {
+              description: "Banco limpo",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      data: { $ref: "#/components/schemas/RemovedResponse" },
+                    },
+                  },
+                },
+              },
+            },
           },
         },
       },

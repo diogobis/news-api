@@ -124,7 +124,7 @@ export async function syncAll() {
             thumbnail: detail.thumbnail,
             originalUrl: detail.original_url,
             body: detail.body,
-            authors: detail.authors?.join(", ") ?? null,
+            authors: detail.authors ?? null,
             detailsFetched: true,
           })
           .where(eq(schema.articles.uuid, uuid))

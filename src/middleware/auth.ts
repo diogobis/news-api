@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { eq } from "drizzle-orm";
 import { env } from "../config/env";
 import { AppError } from "../lib/appError";
+import { db, schema } from "../db";
 
 const JWT_SECRET = env.JWT_SECRET;
 
@@ -28,9 +30,14 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction) {
   const token = header.slice(7);
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JwtPayload;
+    const user = db.select().from(schema.users).where(eq(schema.users.id, payload.userId)).get();
+    if (!user) {
+      throw new AppError(401, "User not found. Please log in again.");
+    }
     req.user = payload;
     next();
-  } catch {
+  } catch (err) {
+    if (err instanceof AppError) throw err;
     throw new AppError(401, "Invalid or expired token");
   }
 }

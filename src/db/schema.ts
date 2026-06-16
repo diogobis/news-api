@@ -8,7 +8,7 @@ export const articles = sqliteTable("articles", {
   thumbnail: text("thumbnail"),
   originalUrl: text("original_url"),
   body: text("body"),
-  authors: text("authors"),
+  authors: text("authors", { mode: "json" }).$type<string[]>(),
   language: text("language").default("pt-419"),
   country: text("country").default("BR"),
   fetchedAt: text("fetched_at"),

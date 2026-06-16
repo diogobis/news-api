@@ -55,6 +55,33 @@ export async function createComment(
   return inserted;
 }
 
+export async function updateComment(
+  userId: number,
+  commentId: number,
+  content: string
+): Promise<CommentRow> {
+  const comment = db
+    .select()
+    .from(schema.comments)
+    .where(eq(schema.comments.id, commentId))
+    .get();
+
+  if (!comment) {
+    throw new AppError(404, "Comment not found");
+  }
+
+  if (comment.userId !== userId) {
+    throw new AppError(403, "You can only edit your own comments");
+  }
+
+  db.update(schema.comments)
+    .set({ content })
+    .where(eq(schema.comments.id, commentId))
+    .run();
+
+  return { ...comment, content };
+}
+
 export async function deleteComment(userId: number, commentId: number): Promise<void> {
   const comment = db
     .select()

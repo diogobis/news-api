@@ -3,7 +3,7 @@ import { z } from "zod";
 import { validate } from "../lib/validate";
 import { sendSuccess } from "../lib/response";
 import { requireAuth } from "../middleware/auth";
-import { createComment, deleteComment, listComments } from "../services/comments";
+import { createComment, deleteComment, listComments, updateComment } from "../services/comments";
 
 const router = Router();
 
@@ -11,6 +11,11 @@ const createCommentSchema = z.object({
   articleUuid: z.string().uuid(),
   content: z.string().min(1).max(1000),
   parentId: z.number().int().positive().optional().nullable(),
+});
+
+const updateCommentSchema = z.object({
+  id: z.coerce.number().int().positive(),
+  content: z.string().min(1).max(1000),
 });
 
 const deleteCommentSchema = z.object({
@@ -36,6 +41,16 @@ router.get("/:articleUuid", async (req: Request, res: Response, next: NextFuncti
     const { articleUuid } = validate(listCommentsSchema, req.params);
     const comments = await listComments(articleUuid);
     sendSuccess(res, comments);
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/:id", requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id, content } = validate(updateCommentSchema, { ...req.params, ...req.body });
+    const result = await updateComment(req.user!.userId, id, content);
+    sendSuccess(res, result);
   } catch (err) {
     next(err);
   }
