@@ -45,8 +45,9 @@ app.listen(PORT, async () => {
 
   const existing = db.select().from(schema.syncLog).limit(1).get();
   if (!existing) {
-    console.log("[sync] First run detected — running initial sync...");
-    await syncAll();
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    console.log("[sync] First run detected — running initial sync (past week)...");
+    await syncAll(weekAgo);
   } else {
     console.log("[sync] Sync log exists — relying on cron schedule");
   }

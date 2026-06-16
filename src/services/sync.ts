@@ -42,12 +42,15 @@ async function fetchDetailsSequential(uuids: string[]) {
   return results;
 }
 
-export async function syncAll() {
+export async function syncAll(since?: string) {
   const now = new Date().toISOString();
   console.log(`[sync] Starting sync at ${now}`);
 
-  const lastSyncRow = db.select().from(schema.syncLog).limit(1).get();
-  const lastSyncedAt = lastSyncRow?.lastSyncedAt;
+  let lastSyncedAt = since;
+  if (!lastSyncedAt) {
+    const lastSyncRow = db.select().from(schema.syncLog).limit(1).get();
+    lastSyncedAt = lastSyncRow?.lastSyncedAt;
+  }
   if (lastSyncedAt) {
     console.log(`[sync] Fetching articles published after ${lastSyncedAt}`);
   }
