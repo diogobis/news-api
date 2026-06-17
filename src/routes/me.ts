@@ -14,7 +14,7 @@ const router = Router();
 router.use(requireAuth);
 
 const addMuteSchema = z.object({
-  keyword: z.string().min(1).max(100),
+  keyword: z.string().min(3).max(100),
 });
 
 const removeMuteSchema = z.object({
@@ -57,7 +57,7 @@ const newsQuerySchema = z.object({
   publishedFrom: z.string().optional(),
   publishedTo: z.string().optional(),
   page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
+  limit: z.coerce.number().int().min(1).max(50).default(15),
 });
 
 router.get("/news", async (req: Request, res: Response, next: NextFunction) => {

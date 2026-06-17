@@ -40,7 +40,7 @@ const options: swaggerJsdoc.Options = {
           type: "object",
           properties: {
             page: { type: "integer", example: 1 },
-            limit: { type: "integer", example: 20 },
+            limit: { type: "integer", example: 15 },
             total: { type: "integer", example: 342 },
             totalPages: { type: "integer", example: 18 },
           },
@@ -198,7 +198,7 @@ const options: swaggerJsdoc.Options = {
               name: "limit",
               in: "query",
               required: false,
-              schema: { type: "integer", default: 20, maximum: 50 },
+              schema: { type: "integer", default: 15, maximum: 50 },
               description: "Itens por página (1–50)",
             },
             {
@@ -389,7 +389,7 @@ const options: swaggerJsdoc.Options = {
               name: "limit",
               in: "query",
               required: false,
-              schema: { type: "integer", default: 20, maximum: 50 },
+              schema: { type: "integer", default: 15, maximum: 50 },
             },
             {
               name: "search",
