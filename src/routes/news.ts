@@ -20,7 +20,7 @@ router.get("/", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const params = validate(newsQuerySchema, req.query);
     const { articles, total } = await listArticles(params);
-    sendSuccess(res, articles, buildMeta(total, params.page, params.limit) as unknown as Record<string, unknown>);
+    sendSuccess(res, articles, buildMeta(total, params.page, params.limit));
   } catch (err) {
     next(err);
   }

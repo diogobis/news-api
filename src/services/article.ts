@@ -1,5 +1,5 @@
 import { db, schema } from "../db";
-import { eq, inArray, sql, and } from "drizzle-orm";
+import { eq, inArray, sql, and, like, notLike, gte, lte, desc, type SQL } from "drizzle-orm";
 import { AppError } from "../lib/appError";
 import { fetchArticleDetails } from "./fetcher";
 
@@ -38,7 +38,7 @@ export async function listArticles(params: {
   const { category, search, publishedFrom, publishedTo, page, limit, mutedKeywords } = params;
   const offset = (page - 1) * limit;
 
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
 
   if (category) {
     const matchingUuids = db
@@ -49,21 +49,21 @@ export async function listArticles(params: {
     conditions.push(inArray(schema.articles.uuid, matchingUuids));
   }
 
-  if (search) {
-    conditions.push(sql`title LIKE ${`%${search}%`}`);
+  if (search && search.trim()) {
+    conditions.push(like(schema.articles.title, `%${search.trim()}%`));
   }
 
   if (publishedFrom) {
-    conditions.push(sql`published_at >= ${publishedFrom}`);
+    conditions.push(gte(schema.articles.publishedAt, publishedFrom));
   }
   if (publishedTo) {
-    conditions.push(sql`published_at <= ${publishedTo}`);
+    conditions.push(lte(schema.articles.publishedAt, publishedTo));
   }
 
   if (mutedKeywords && mutedKeywords.length > 0) {
     for (const keyword of mutedKeywords) {
       conditions.push(
-        sql`(title NOT LIKE ${`%${keyword}%`} AND publisher NOT LIKE ${`%${keyword}%`})`
+        and(notLike(schema.articles.title, `%${keyword}%`), notLike(schema.articles.publisher, `%${keyword}%`))!
       );
     }
   }
@@ -79,7 +79,7 @@ export async function listArticles(params: {
     .select()
     .from(schema.articles)
     .where(whereClause)
-    .orderBy(sql`published_at DESC`)
+    .orderBy(desc(schema.articles.publishedAt))
     .limit(limit)
     .offset(offset);
 
@@ -98,7 +98,7 @@ export async function listArticles(params: {
     catMap.set(c.articleUuid, list);
   }
 
-  const articles: ArticleRow[] = rows.map((row) => ({
+  const articles = rows.map((row) => ({
     ...row,
     body: formatBody(row.body),
     detailsFetched: row.detailsFetched ?? false,
@@ -126,7 +126,7 @@ export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
         body: detail.body,
         thumbnail: detail.thumbnail,
         originalUrl: detail.original_url,
-            authors: detail.authors,
+        authors: detail.authors,
         detailsFetched: true,
         fetchedAt: new Date().toISOString(),
       })

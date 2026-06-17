@@ -1,5 +1,5 @@
 import { db, schema } from "../db";
-import { eq, and, inArray, sql } from "drizzle-orm";
+import { eq, and, inArray, like, gte, lte, type SQL } from "drizzle-orm";
 import { AppError } from "../lib/appError";
 
 export interface FavoriteFilters {
@@ -64,20 +64,20 @@ export async function removeFavorite(userId: number, articleUuid: string): Promi
 }
 
 export async function listFavorites(userId: number, filters?: FavoriteFilters) {
-  const conditions: any[] = [
+  const conditions: SQL[] = [
     eq(schema.userFavorites.userId, userId),
   ];
 
   if (filters?.search) {
-    conditions.push(sql`${schema.articles.title} LIKE ${`%${filters.search}%`}`);
+    conditions.push(like(schema.articles.title, `%${filters.search}%`));
   }
 
   if (filters?.publishedFrom) {
-    conditions.push(sql`${schema.articles.publishedAt} >= ${filters.publishedFrom}`);
+    conditions.push(gte(schema.articles.publishedAt, filters.publishedFrom));
   }
 
   if (filters?.publishedTo) {
-    conditions.push(sql`${schema.articles.publishedAt} <= ${filters.publishedTo}`);
+    conditions.push(lte(schema.articles.publishedAt, filters.publishedTo));
   }
 
   if (filters?.category) {

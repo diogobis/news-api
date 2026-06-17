@@ -1,9 +1,14 @@
 import { Response } from "express";
 
-export function sendSuccess(res: Response, data: unknown, meta?: Record<string, unknown>) {
-  const body: Record<string, unknown> = { data };
-  if (meta) body.meta = meta as Record<string, unknown>;
-  res.json(body);
+export function sendSuccess<T, M = undefined>(
+  res: Response,
+  data: T,
+  meta?: M
+) {
+  res.json({
+    data,
+    ...(meta !== undefined && { meta }),
+  });
 }
 
 export function sendError(res: Response, status: number, message: string) {

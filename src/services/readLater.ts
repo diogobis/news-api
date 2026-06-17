@@ -1,5 +1,5 @@
 import { db, schema } from "../db";
-import { eq, and, inArray, sql, gte } from "drizzle-orm";
+import { eq, and, inArray, like, gte, lte, type SQL } from "drizzle-orm";
 import { AppError } from "../lib/appError";
 
 export interface QueueFilters {
@@ -66,21 +66,21 @@ export async function removeArticle(userId: number, articleUuid: string): Promis
 export async function listQueue(userId: number, filters?: QueueFilters) {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
-  const conditions: any[] = [
+  const conditions: SQL[] = [
     eq(schema.userReadLater.userId, userId),
     gte(schema.userReadLater.savedAt, cutoff),
   ];
 
   if (filters?.search) {
-    conditions.push(sql`${schema.articles.title} LIKE ${`%${filters.search}%`}`);
+    conditions.push(like(schema.articles.title, `%${filters.search}%`));
   }
 
   if (filters?.publishedFrom) {
-    conditions.push(sql`${schema.articles.publishedAt} >= ${filters.publishedFrom}`);
+    conditions.push(gte(schema.articles.publishedAt, filters.publishedFrom));
   }
 
   if (filters?.publishedTo) {
-    conditions.push(sql`${schema.articles.publishedAt} <= ${filters.publishedTo}`);
+    conditions.push(lte(schema.articles.publishedAt, filters.publishedTo));
   }
 
   if (filters?.category) {

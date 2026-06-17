@@ -66,7 +66,7 @@ router.get("/news", async (req: Request, res: Response, next: NextFunction) => {
     const muted = await listKeywords(req.user!.userId);
     const mutedKeywords = muted.map((k) => k.keyword);
     const { articles, total } = await listArticles({ ...params, mutedKeywords });
-    sendSuccess(res, articles, buildMeta(total, params.page, params.limit) as unknown as Record<string, unknown>);
+    sendSuccess(res, articles, buildMeta(total, params.page, params.limit));
   } catch (err) {
     next(err);
   }
