@@ -1,5 +1,5 @@
 import { db, schema } from "../db";
-import { eq, and, inArray, like, gte, lte, type SQL } from "drizzle-orm";
+import { eq, and, inArray, like, gte, lte, lt, type SQL } from "drizzle-orm";
 import { AppError } from "../lib/appError";
 
 export interface QueueFilters {
@@ -60,6 +60,14 @@ export async function removeArticle(userId: number, articleUuid: string): Promis
 
   if (result.changes === 0) {
     throw new AppError(404, "Artigo não está na fila de leitura posterior");
+  }
+}
+
+export async function cleanupExpired() {
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
+  const result = db.delete(schema.userReadLater).where(lt(schema.userReadLater.savedAt, cutoff)).run();
+  if (result.changes > 0) {
+    console.log(`[cleanup] Removidos ${result.changes} itens expirados da fila de leitura posterior`);
   }
 }
 

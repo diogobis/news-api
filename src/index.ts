@@ -11,6 +11,7 @@ import commentsRouter from "./routes/comments";
 import debugRouter from "./routes/debug";
 import { errorHandler } from "./middleware/error";
 import { syncAll } from "./services/sync";
+import { cleanupExpired } from "./services/readLater";
 import { db, schema } from "./db";
 import { swaggerSpec } from "./swagger";
 
@@ -52,7 +53,7 @@ app.listen(PORT, async () => {
     console.log("[sync] Log de sync existe — usando agendamento cron");
   }
 
-  const job = new CronJob(
+  const syncJob = new CronJob(
     "0 */6 * * *",
     () => { syncAll().catch(console.error); },
     null,
@@ -60,5 +61,15 @@ app.listen(PORT, async () => {
     "America/Sao_Paulo"
   );
 
-  console.log(`[cron] Sync agendado a cada 6 horas (${job.nextDate().toISO()})`);
+  console.log(`[cron] Sync agendado a cada 6 horas (${syncJob.nextDate().toISO()})`);
+
+  const cleanupJob = new CronJob(
+    "0 */6 * * *",
+    () => { cleanupExpired(); },
+    null,
+    true,
+    "America/Sao_Paulo"
+  );
+
+  console.log(`[cron] Limpeza de leitura posterior agendada a cada 6 horas (${cleanupJob.nextDate().toISO()})`);
 });
