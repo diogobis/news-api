@@ -9,13 +9,13 @@ const router = Router();
 
 const createCommentSchema = z.object({
   articleUuid: z.string().uuid(),
-  content: z.string().min(1).max(1000),
+  content: z.string().min(3).max(1000),
   parentId: z.number().int().positive().optional().nullable(),
 });
 
 const updateCommentSchema = z.object({
   id: z.coerce.number().int().positive(),
-  content: z.string().min(1).max(1000),
+  content: z.string().min(3).max(1000),
 });
 
 const deleteCommentSchema = z.object({
