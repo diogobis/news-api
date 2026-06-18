@@ -64,12 +64,12 @@ app.listen(PORT, async () => {
   console.log(`[cron] Sync agendado a cada 6 horas (${syncJob.nextDate().toISO()})`);
 
   const cleanupJob = new CronJob(
-    "0 */6 * * *",
+    "0 * * * *",
     () => { cleanupExpired(); },
     null,
     true,
     "America/Sao_Paulo"
   );
 
-  console.log(`[cron] Limpeza de leitura posterior agendada a cada 6 horas (${cleanupJob.nextDate().toISO()})`);
+  console.log(`[cron] Limpeza de leitura posterior agendada a cada 1 hora (${cleanupJob.nextDate().toISO()})`);
 });
