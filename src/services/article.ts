@@ -20,10 +20,13 @@ export interface ArticleRow {
   publishedAt: string | null;
   thumbnail: string | null;
   originalUrl: string | null;
-  body: string | null;
   authors: string[] | null;
   detailsFetched: boolean;
   categories: string[];
+}
+
+export interface ArticleDetailRow extends ArticleRow {
+  body: string | null;
 }
 
 export async function listArticles(params: {
@@ -68,6 +71,8 @@ export async function listArticles(params: {
     }
   }
 
+  conditions.push(eq(schema.articles.detailsFetched, true))
+
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [{ count: total }] = await db
@@ -76,7 +81,16 @@ export async function listArticles(params: {
     .where(whereClause);
 
   const rows = await db
-    .select()
+    .select({
+      uuid: schema.articles.uuid,
+      title: schema.articles.title,
+      publisher: schema.articles.publisher,
+      publishedAt: schema.articles.publishedAt,
+      thumbnail: schema.articles.thumbnail,
+      originalUrl: schema.articles.originalUrl,
+      authors: schema.articles.authors,
+      detailsFetched: schema.articles.detailsFetched,
+    })
     .from(schema.articles)
     .where(whereClause)
     .orderBy(desc(schema.articles.publishedAt))
@@ -100,7 +114,6 @@ export async function listArticles(params: {
 
   const articles = rows.map((row) => ({
     ...row,
-    body: formatBody(row.body),
     detailsFetched: row.detailsFetched ?? false,
     categories: catMap.get(row.uuid) ?? [],
   }));
@@ -108,7 +121,7 @@ export async function listArticles(params: {
   return { articles, total };
 }
 
-export async function getArticleDetails(uuid: string): Promise<ArticleRow> {
+export async function getArticleDetails(uuid: string): Promise<ArticleDetailRow> {
   const existing = await db.query.articles.findFirst({
     where: eq(schema.articles.uuid, uuid),
   });
