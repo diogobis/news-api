@@ -57,9 +57,11 @@ export async function listArticles(params: {
   }
 
   if (publishedFrom) {
+    // Filtra artigos com data de publicação maior ou igual a publishedFrom
     conditions.push(gte(schema.articles.publishedAt, publishedFrom));
   }
   if (publishedTo) {
+    // Filtra artigos com data de publicação menor ou igual a publishedTo
     conditions.push(lte(schema.articles.publishedAt, publishedTo));
   }
 
