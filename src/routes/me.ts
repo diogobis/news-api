@@ -101,19 +101,21 @@ router.delete("/mutes/:id", async (req: Request, res: Response, next: NextFuncti
   }
 });
 
+// Salva um artigo na fila de leitura do usuário
 router.post("/read-later", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { articleUuid } = validate(addReadLaterSchema, req.body);
-    const result = await saveArticle(req.user!.userId, articleUuid);
+    const { articleUuid } = validate(addReadLaterSchema, req.body); // Valida o UUID do artigo
+    const result = await saveArticle(req.user!.userId, articleUuid); // Associa artigo ao usuário
     sendSuccess(res, result);
   } catch (err) {
     next(err);
   }
 });
 
+// Lista os artigos salvos para ler depois, com suporte a filtros
 router.get("/read-later", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const filters = validate(readLaterQuerySchema, req.query);
+    const filters = validate(readLaterQuerySchema, req.query); // Valida filtros opcionais (busca, datas, categoria)
     const items = await listQueue(req.user!.userId, filters);
     sendSuccess(res, items);
   } catch (err) {
@@ -121,6 +123,7 @@ router.get("/read-later", async (req: Request, res: Response, next: NextFunction
   }
 });
 
+// Remove um artigo da fila de leitura pelo UUID
 router.delete("/read-later/:articleUuid", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { articleUuid } = validate(removeReadLaterSchema, req.params);
@@ -131,19 +134,21 @@ router.delete("/read-later/:articleUuid", async (req: Request, res: Response, ne
   }
 });
 
+// Salva um artigo nos favoritos do usuário
 router.post("/favorites", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { articleUuid } = validate(addFavoriteSchema, req.body);
-    const result = await saveFavorite(req.user!.userId, articleUuid);
+    const { articleUuid } = validate(addFavoriteSchema, req.body); // Valida o UUID do artigo
+    const result = await saveFavorite(req.user!.userId, articleUuid); // Associa artigo aos favoritos do usuário
     sendSuccess(res, result);
   } catch (err) {
     next(err);
   }
 });
 
+// Lista os artigos favoritados, com suporte a filtros
 router.get("/favorites", async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const filters = validate(favoriteQuerySchema, req.query);
+    const filters = validate(favoriteQuerySchema, req.query); // Valida filtros opcionais (busca, datas, categoria)
     const items = await listFavorites(req.user!.userId, filters);
     sendSuccess(res, items);
   } catch (err) {
@@ -151,6 +156,7 @@ router.get("/favorites", async (req: Request, res: Response, next: NextFunction)
   }
 });
 
+// Remove um artigo dos favoritos pelo UUID
 router.delete("/favorites/:articleUuid", async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { articleUuid } = validate(removeFavoriteSchema, req.params);

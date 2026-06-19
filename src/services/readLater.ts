@@ -2,6 +2,7 @@ import { db, schema } from "../db";
 import { eq, and, inArray, like, gte, lte, lt, type SQL } from "drizzle-orm";
 import { AppError } from "../lib/appError";
 
+// Filtros opcionais para listagem da fila de leitura
 export interface QueueFilters {
   search?: string;
   publishedFrom?: string;
@@ -9,13 +10,16 @@ export interface QueueFilters {
   category?: string;
 }
 
+// Representa um item salvo na fila de leitura posterior
 export interface ReadLaterItem {
   userId: number;
   articleUuid: string;
   savedAt: string;
 }
 
+// Salva um artigo na fila de leitura do usuário
 export async function saveArticle(userId: number, articleUuid: string): Promise<ReadLaterItem> {
+  // Verifica se o artigo existe antes de salvar
   const article = await db.query.articles.findFirst({
     where: eq(schema.articles.uuid, articleUuid),
   });
@@ -24,6 +28,7 @@ export async function saveArticle(userId: number, articleUuid: string): Promise<
     throw new AppError(404, "Artigo não encontrado");
   }
 
+  // Impede duplicatas: verifica se o artigo já está na fila do usuário
   const existing = await db
     .select()
     .from(schema.userReadLater)
@@ -39,6 +44,7 @@ export async function saveArticle(userId: number, articleUuid: string): Promise<
     throw new AppError(409, "Artigo já está na fila de leitura posterior");
   }
 
+  // Insere o registro com o timestamp atual
   const now = new Date().toISOString();
   const [inserted] = await db
     .insert(schema.userReadLater)
@@ -48,6 +54,7 @@ export async function saveArticle(userId: number, articleUuid: string): Promise<
   return inserted;
 }
 
+// Remove um artigo da fila de leitura do usuário
 export async function removeArticle(userId: number, articleUuid: string): Promise<void> {
   const result = await db
     .delete(schema.userReadLater)
@@ -58,47 +65,64 @@ export async function removeArticle(userId: number, articleUuid: string): Promis
       )
     );
 
+  // Lança erro se nenhum registro foi encontrado para deletar
   if (result.changes === 0) {
     throw new AppError(404, "Artigo não está na fila de leitura posterior");
   }
 }
 
+// Remove itens expirados da fila — artigos salvos há mais de 48 horas
+// Deve ser chamado periodicamente por um job de limpeza
 export async function cleanupExpired() {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
-  const result = db.delete(schema.userReadLater).where(lt(schema.userReadLater.savedAt, cutoff)).run();
+
+  const result = db
+    .delete(schema.userReadLater)
+    .where(lt(schema.userReadLater.savedAt, cutoff))
+    .run();
+
   if (result.changes > 0) {
     console.log(`[cleanup] Removidos ${result.changes} itens expirados da fila de leitura posterior`);
   }
 }
 
+// Lista os artigos da fila de leitura do usuário, excluindo itens expirados (> 48h)
+// Suporta filtros opcionais de busca, data de publicação e categoria
 export async function listQueue(userId: number, filters?: QueueFilters) {
+  // Define o limite de expiração: apenas itens salvos nas últimas 48 horas
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
 
   const conditions: SQL[] = [
     eq(schema.userReadLater.userId, userId),
-    gte(schema.userReadLater.savedAt, cutoff),
+    gte(schema.userReadLater.savedAt, cutoff), // Exclui itens expirados
   ];
 
+  // Filtro por título do artigo
   if (filters?.search) {
     conditions.push(like(schema.articles.title, `%${filters.search}%`));
   }
 
+  // Filtro por data de publicação inicial
   if (filters?.publishedFrom) {
     conditions.push(gte(schema.articles.publishedAt, filters.publishedFrom));
   }
 
+  // Filtro por data de publicação final
   if (filters?.publishedTo) {
     conditions.push(lte(schema.articles.publishedAt, filters.publishedTo));
   }
 
+  // Filtro por categoria: busca os UUIDs dos artigos que pertencem à categoria
   if (filters?.category) {
     const matchingUuids = db
       .select({ uuid: schema.articleCategories.articleUuid })
       .from(schema.articleCategories)
       .where(eq(schema.articleCategories.category, filters.category));
+
     conditions.push(inArray(schema.articles.uuid, matchingUuids));
   }
 
+  // Retorna os itens da fila com dados do artigo via join
   return db
     .select({
       userId: schema.userReadLater.userId,

@@ -156,3 +156,6 @@ Desktop.ini
 *.swo
 *~
 *.orig
+
+tmp/
+output/
